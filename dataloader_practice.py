@@ -1,3 +1,9 @@
+###########################################
+# 2020.08.31
+# python 3.7.5
+# pytorch 1.4.0
+###########################################
+
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -6,11 +12,10 @@ from torch.nn import init
 import torch.optim as optim
 from torch.utils import data
 import torchvision.models as models
+import torchvision.transforms as transforms
 import numpy as np
-import cv2
 import os
 from datetime import datetime
-import matplotlib.pyplot as plt
 
 def getData(mode):
     if mode == 'train':
@@ -32,10 +37,21 @@ class RetinopathyLoader(data.Dataset):
             self.img_name (str list): String list that store all image names.
             self.label (int or float list): Numerical list that store all ground truth label values.
         """
+        """
+        # TA example
+        self.root = os.getcwd()+'/data/'
+        self.img_name, self.label = getData(mode)
+        self.mode = mode
+        print("> Found %d images..." % (len(self.img_name)))
+        """
 
     def __len__(self):
         """'return the size of dataset"""
         return ...
+        """
+        # TA example
+        return len(self.img_name)
+        """
 
     def __getitem__(self, index):
         """
@@ -51,12 +67,27 @@ class RetinopathyLoader(data.Dataset):
                   In the testing phase, if you have a normalization process during the training phase,
                   you only need to normalize the data. 
                   
-                  hints: Convert the pixel value to [0, 1]
+                  hints: Convert the pixel value to [-1, 1]
                          Transpose the image shape from [H, W, C] to [C, H, W]
                          
             step4. Return processed image and label
         """
         return ...
+
+        """
+        # TA example
+        import cv2
+        img = cv2.imread(self.root+self.img_name[index]+'.jpeg')
+        img_transform = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+                        ]
+                    )
+        img = img_transform(img)
+        label = int(self.label[index])
+
+        return img, label
+        """
 
 if __name__ == '__main__':
 
@@ -82,6 +113,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     # train
+    print ('Start training ...')
     for epoch in range(1, EPOCH+1):
         net.train()
         epoch_start = datetime.now()
@@ -90,8 +122,8 @@ if __name__ == '__main__':
         # in each iteration
         for imgs, labels in train_data:
             # prepare data
-            imgs = imgs.float().cuda()
-            labels = labels.cuda()
+            imgs = imgs.float().cuda() # [B, 3, 512, 512]
+            labels = labels.cuda() # [B]
             # forward
             outputs = net(imgs)
             # loss
